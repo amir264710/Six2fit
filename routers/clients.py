@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import schemas, crud
 from database import get_db
@@ -38,3 +38,15 @@ def add_client(
         special_conditions=special_conditions
     )
     return crud.create_client(db=db, client=client_data)
+
+@router.patch("/clients/{client_id}/bodyfat")
+def update_client_body_fat(
+    client_id: int,
+    body_fat_percentage: float,
+    db: Session = Depends(get_db)
+):
+    client = crud.get_client(db, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    updated_client = crud.update_body_fat(db, client_id, body_fat_percentage)
+    return updated_client
