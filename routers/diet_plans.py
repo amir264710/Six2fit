@@ -80,74 +80,49 @@ def generate_diet_plan(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-        # Convert numeric fields to text
+    
+    # Convert numeric fields to text
     gender_text = "Male" if client.gender == 1 else "Female"
+
     activity_text = (
-        "No workout" if client.activity_level == 1
-        else "Slightly active" if client.activity_level == 2
-        else "Active" if client.activity_level == 3
+        "Sedentary" if client.activity_level == 1
+        else "Light activity " if client.activity_level == 2
+        else "Moderate activity" if client.activity_level == 3
+        else "High activity" if client.activity_level == 4
+        else "Professional athlete" if client.activity_level == 5
         else "Unknown"
     )
-    meal_preference = (
-        "Vegetarian" if client.meal_preference == 1
-        else "Vegan" if client.meal_preference == 2
-        else "Non-Vegetarian" if client.meal_preference == 3
+
+    preferred_kind_food = (
+        "Common Iranian Meals" if plan.preferred_kind_food == 1
+        else "General/International Meals" if plan.preferred_kind_food == 2
+        else "No Specific Preference" if plan.preferred_kind_food == 3
         else "Unknown"
     )
 
     access_to_cooking_text= (
-        "very much" if plan.access_to_cooking == 1
-        else "slightly" if plan.access_to_cooking == 2
-        else "maybe not so much"
+        "Low Access - Up to 30 minutes per day" if plan.access_to_cooking == 1
+        else "Medium Access - 30 to 90 minutes per day" if plan.access_to_cooking == 2
+        else "High Access - More than 90 minutes per day" if plan.access_to_cooking == 3
+        else "Unknown (Assume around 15 minutes to 25 minutes per day)"
     )
-
-    # Build the client data as an f-string
-    client_data = f"""
-Client Data:
-- current_weight_kg: {client.current_weight_kg}
-- height_cm: {client.height_cm}
-- gender: {gender_text}
-- age: {client.age}
-- activity_level: {activity_text}
-- body_fat_percentage: {client.body_fat_percentage}
-- meal_preference: local
-- food_allergies: {client.food_allergies} (DO NOT INCLUDE THIS IN THE DIET AT ANY COST)
-- disliked_foods: {client.disliked_foods} (better not to includec in the diet)
-- special_conditions: {client.special_conditions}
-"""
-
-    # Build the plan data as an f-string using the plan payload
-    plan_data = f"""
-Plan Data:
-- current_weight: {plan.current_weight}
-- goal_weight: {plan.goal_weight}
-- target_calorie_pr: {plan.target_calorie_pr} (in single day)
-- meal_frequency: 3 (how much meals per day, include main course and snacks)
-- meal_avoids: {plan.meal_avoids}
-- meal_options: 3 (how much options per meal)
-- special_cases: {plan.special_cases}
-- preferred_kind_food: {plan.preferred_kind_food}
-- access_to_cooking: {access_to_cooking_text}
-- plan_file_path: {plan.plan_file_path}
-- plan_rarity: {plan.plan_rarity}
-"""
 
     # Compose the complete question with instructions as an f-string
     question = f"""
-Based on the following client data and plan data, generate a personalized and detailed diet plan in a complete HTML document.
-Your output must include only HTML code without any additional commentary or text. (DOUABLE CHECK FOR THE DIET TO NOT 
-HAVE ANY OF THE food_allergies IN IT). Also, make each meal option has the ingredients and approximate calories for each meal.
-and the client is from Iran, so the diet should be based on Iranian food and ingredients. and also make the language of the diet plan in Persian.
-
-
-{client_data}
-
-{plan_data}
-
-Instructions:
-1. Create a full HTML document with proper tags, including <!DOCTYPE html>, <html>, <head> (with a <title>) and <body>.
-2. Structure the HTML to clearly showcase the best diet plan tailored for this client (make it looks good, clean and have some emoji).
-3. Output only the HTML code.
+Based on the info that the client has provided, create a diet plan for the customer.
+The diet plan should be in HTML format and include the following sections and your response should be in 
+HTML format whithout any other text or comments:
+the clinet is a {client.age} old {gender_text}, who is {client.current_weight_kg} kg and {client.height_cm} cm tall
+and wanted to be {plan.goal_weight} kg, so he needed to lose {client.current_weight_kg - plan.goal_weight} kg and have
+average of {plan.target_calorie_pr} per day. 
+The client is {activity_text} and can spend {access_to_cooking_text} for cooking in a day.
+the client said this for allergies: {client.food_allergies} (DO NOT INCLUDE THIS IN THE DIET AT ANY COST)
+the client said this for dislikes foods: {client.disliked_foods} (better not to include in the diet, but if it is necessary, include it)
+the client said this for special conditions: {client.special_conditions}
+the client said this for prefers kind of food: {preferred_kind_food}
+the diet plan you will create should have {plan.plan_rarity} options for each meal.
+also, the client said this for meal preference: {plan.meal_preference}
+Remeber to generate the diep plan in Fasri language.
 """
     generate_html(question, client_id)
 
